@@ -145,17 +145,18 @@ int main() {
                 if ((chr < 20) || (chr > 127)) {
                     chr = 0x20;
                 }
+                // padding to get proper aspect ratio
+                mvaddch(y, x*2, ' ');
                 // cursor on?
                 if ((x == cursor_x) && (y == cursor_y)) {
                     attron(A_UNDERLINE);
                 }
-                // render padding and character
-                mvaddch(y, x*2, ' ');
+                // character 
+                mvaddch(y, x*2+1, chr);
                 // cursor off?
                 if ((x == cursor_x) && (y == cursor_y)) {
                     attroff(A_UNDERLINE);
                 }
-                mvaddch(y, x*2+1, chr);
             }
         }
         refresh();
