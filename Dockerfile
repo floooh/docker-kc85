@@ -10,3 +10,4 @@ COPY --from=build kc85 kc85
 # need to give the terminal some time, otherwise rendering is messed up
 ENTRYPOINT sleep 0.2 && ./kc85
 
+

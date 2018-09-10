@@ -20,28 +20,52 @@
 
 kc85_t kc85;
 
-/* refresh at 30fps */
+// run the emulator and render-loop at 30fps
 #define FRAME_USEC (33333)
 
-/* a signal handler for Ctrl-C, for proper cleanup  */
+// a signal handler for Ctrl-C, for proper cleanup 
 static int quit_requested = 0;
-static void catch_sigterm(int signo) {
+static void catch_sigint(int signo) {
     quit_requested = 1;
 }
 
-/* convert a KC color to ncurses color. KC85 has 16 foreground colors, ncurses
-only 8, so we duplicate the foreground colors
-*/
-int kc85_to_curses_color(int c) {
-    switch (c & 7) {
-        case 0: return COLOR_BLACK;
-        case 1: return COLOR_BLUE;
-        case 2: return COLOR_RED;
-        case 3: return COLOR_MAGENTA;
-        case 4: return COLOR_GREEN;
-        case 5: return COLOR_CYAN;
-        case 6: return COLOR_YELLOW;
-        default: return COLOR_WHITE;
+void init_kc_colors(void) {
+    start_color();
+
+    // KC85/4 background colors (darker than foreground)
+    init_color(0, 0, 0, 0);            // black
+    init_color(1, 0, 0, 640);          // dark-blue
+    init_color(2, 640, 0, 0);          // dark-red
+    init_color(3, 640, 0, 640);        // dark-magenta
+    init_color(4, 0, 640, 0);          // dark-green
+    init_color(5, 0, 640, 640);        // dark-cyan
+    init_color(6, 640, 640, 0);        // dark-yellow
+    init_color(7, 640, 640, 640);      // grey
+
+    // KC85/4 foreground colors
+    init_color(8, 0, 0, 0);             // black
+    init_color(9, 0, 0, 1000);          // blue
+    init_color(10, 1000, 0, 0);         // red
+    init_color(11, 1000, 0, 1000);      // magenta
+    init_color(12, 0, 1000, 0);         // green
+    init_color(13, 0, 1000, 1000);      // cyan
+    init_color(14, 1000, 1000, 0);      // yellow
+    init_color(15, 1000, 1000, 1000);   // white
+    init_color(16, 0, 0, 0);            // black #2
+    init_color(17, 1000, 0, 640);       // violet
+    init_color(18, 1000, 640, 0);       // orange
+    init_color(19, 1000, 0, 640);       // purple
+    init_color(20, 0, 1000, 640);       // blueish-green
+    init_color(21, 0, 640, 1000);       // greenish-blue
+    init_color(22, 640, 1000, 0);       // yellow-green
+    init_color(23, 1000, 1000, 1000);   // white
+
+    // setup 128 color pairs with all color combinations
+    for (int fg = 0; fg < 16; fg++) {
+        for (int bg = 0; bg < 8; bg++) {
+            int cp = (fg*8 + bg) + 1;
+            init_pair(cp, fg+8, bg);
+        }
     }
 }
 
@@ -60,11 +84,12 @@ int main() {
         .rom_kcbasic_size = sizeof(dump_basic_c0)
     });
 
-    /* install a Ctrl-C signal handler */
-    signal(SIGINT, catch_sigterm);
+    // install a Ctrl-C signal handler
+    signal(SIGINT, catch_sigint);
 
-    /* setup curses */
+    // setup curses
     initscr();
+    init_kc_colors();
     noecho();
     curs_set(FALSE);
     cbreak();
@@ -72,50 +97,31 @@ int main() {
     keypad(stdscr, TRUE);
     attron(A_BOLD);
 
-    /* setup color pairs, KC85 has 16 foreground and 8 background colors, 
-       ncurses has only 8 color slots
-    */
-    start_color();
-    init_color(COLOR_BLACK, 0, 0, 0);
-    init_color(COLOR_BLUE, 0, 0, 1000);
-    init_color(COLOR_RED, 1000, 0, 0);
-    init_color(COLOR_MAGENTA, 1000, 0, 1000);
-    init_color(COLOR_GREEN, 0, 1000, 0);
-    init_color(COLOR_CYAN, 0, 1000, 1000);
-    init_color(COLOR_YELLOW, 1000, 1000, 0);
-    init_color(COLOR_WHITE, 1000, 1000, 1000);
-    for (int fg = 0; fg < 16; fg++) {
-        for (int bg = 0; bg < 8; bg++) {
-            int curses_fg = kc85_to_curses_color(fg);
-            int curses_bg = kc85_to_curses_color(bg);
-            int index = fg*8 + bg;
-            init_pair(index, curses_fg, curses_bg);
-        }
-    }
-
-    /* run the emulator loop */
+    // run the emulation/input/render loop 
     while (!quit_requested) {
-        /* tick the emulator */
+        // tick the emulator for 1 frame
         kc85_exec(&kc85, FRAME_USEC);
 
-        /* keyboard input */
+        // keyboard input
         int ch = getch();
         if (ch != ERR) {
             switch (ch) {
-                case 10:  ch = 0x0D; break; /* ENTER */
-                case 127: ch = 0x01; break; /* BACKSPACE */
-                case 27:  ch = 0x03; break; /* ESCAPE */
-                case 260: ch = 0x08; break; /* LEFT */
-                case 261: ch = 0x09; break; /* RIGHT */
-                case 259: ch = 0x0B; break; /* UP */
-                case 258: ch = 0x0A; break; /* DOWN */
+                case 10:  ch = 0x0D; break; // ENTER
+                case 127: ch = 0x01; break; // BACKSPACE
+                case 27:  ch = 0x03; break; // ESCAPE
+                case 260: ch = 0x08; break; // LEFT
+                case 261: ch = 0x09; break; // RIGHT
+                case 259: ch = 0x0B; break; // UP
+                case 258: ch = 0x0A; break; // DOWN
                 default: break;
             }
-            if (islower(ch)) {
-                ch = toupper(ch);
-            }
-            else if (isupper(ch)) {
-                ch = tolower(ch);
+            if (ch > 32) {
+                if (islower(ch)) {
+                    ch = toupper(ch);
+                }
+                else if (isupper(ch)) {
+                    ch = tolower(ch);
+                }
             }
             if (ch < 256) {
                 kc85_key_down(&kc85, ch);
@@ -123,39 +129,38 @@ int main() {
             }
         }
 
-        /* render the display */
+        // render the display 
         int cursor_x = kc85.ram[4][0x37A0];
         int cursor_y = kc85.ram[4][0x37A1];
-        int cur_color_byte = -1;
+        int cur_color_pair = -1;
         for (int y = 0; y < 32; y++) {
             for (int x = 0; x < 40; x++) {
-                /* get color code from color buffer, note the color buffer is 90 degree rotated! */
-                int color_byte = kc85.ram[5][x*256 + y*8] & 0x7f;
-                if (color_byte != cur_color_byte) {
-                    attron(COLOR_PAIR(color_byte));
+                // get color code from color buffer, note the color buffer is 90 degree rotated!
+                int color_pair = (kc85.ram[5][x*256 + y*8] & 0x7f) + 1;
+                if (color_pair != cur_color_pair) {
+                    attron(COLOR_PAIR(color_pair));
                 }
-                /* padding to get 4x3 aspect ratio */
-                mvaddch(y, x*2, ' ');
-                /* get character code from ASCII buffer */
+                // get character code from ASCII buffer
                 char chr = (char) kc85.ram[4][0x3200 + y*40 + x];
                 if ((chr < 20) || (chr > 127)) {
                     chr = 0x20;
                 }
-                /* cursor on? */
+                // cursor on?
                 if ((x == cursor_x) && (y == cursor_y)) {
-                    attron(A_REVERSE);
+                    attron(A_UNDERLINE);
                 }
-                /* render character */
+                // render padding and character
+                mvaddch(y, x*2, ' ');
+                // cursor off?
+                if ((x == cursor_x) && (y == cursor_y)) {
+                    attroff(A_UNDERLINE);
+                }
                 mvaddch(y, x*2+1, chr);
-                /* cursor off? */
-                if ((x == cursor_x) && (y == cursor_y)) {
-                    attroff(A_REVERSE);
-                }
             }
         }
         refresh();
 
-        /* wait for next frame */
+        // pause until for next frame
         usleep(FRAME_USEC);
     }
     endwin();

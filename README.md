@@ -3,7 +3,13 @@ A KC85/4 emulator in Docker.
 
 ## Howto
 
-To build just the emulator (needs a C compiler and ncurses):
+Run from Docker Hub:
+
+```
+> docker --rm -it flohofwoe/kc85_4
+```
+
+To build just the emulator:
 
 ```
 > cc kc85.c -o kc85 -O3 -lncurses
