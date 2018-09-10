@@ -88,7 +88,6 @@ int main() {
             int curses_fg = kc85_to_curses_color(fg);
             int curses_bg = kc85_to_curses_color(bg);
             int index = fg*8 + bg;
-            assert(index < COLOR_PAIRS);
             init_pair(index, curses_fg, curses_bg);
         }
     }
