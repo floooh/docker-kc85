@@ -70,6 +70,7 @@ int main() {
     cbreak();
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
+    attron(A_BOLD);
 
     /* setup color pairs, KC85 has 16 foreground and 8 background colors, 
        ncurses has only 8 color slots
@@ -142,13 +143,13 @@ int main() {
                 }
                 /* cursor on? */
                 if ((x == cursor_x) && (y == cursor_y)) {
-                    attrset(A_REVERSE);
+                    attron(A_REVERSE);
                 }
                 /* render character */
                 mvaddch(y, x*2+1, chr);
                 /* cursor off? */
                 if ((x == cursor_x) && (y == cursor_y)) {
-                    attrset(A_NORMAL);
+                    attroff(A_REVERSE);
                 }
             }
         }
