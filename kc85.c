@@ -1,11 +1,9 @@
 /*
     kc85.c
 
-    Stripped down KC85/2../4 emulator for the terminal, rendering 
-    the ASCII buffer of the KC85 through curses. Requires a UNIX
+    Stripped down KC85/2../4 emulator running in a (xterm-256color) terminal,
+    rendering the ASCII buffer of the KC85 through curses. Requires a UNIX
     environment to build and run (tested on OSX and Linux).
-
-    Expects to run in xterm-256color (for proper colors)
 
     Select the KC85 model with cmdline args:
 
@@ -42,10 +40,10 @@
 #include <ctype.h>
 #include <signal.h>
 #define COMMON_IMPL
+#include "args.h"
 #include "fs.h"
 #include "keybuf.h"
 #define CHIPS_IMPL
-#include "args.h"
 #include "z80.h"
 #include "z80ctc.h"
 #include "z80pio.h"
@@ -298,6 +296,7 @@ int main(int argc, char* argv[]) {
                 int color_pair = ((int)(color_byte & 0x7F))+1;
                 if (color_pair != cur_color_pair) {
                     attron(COLOR_PAIR(color_pair));
+                    cur_color_pair = color_pair;
                 }
 
                 // get ASCII code from character buffer at 0xB200
