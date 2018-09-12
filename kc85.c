@@ -5,7 +5,7 @@
     the ASCII buffer of the KC85 through curses. Requires a UNIX
     environment to build and run (tested on OSX and Linux).
 
-    Expects to run of xterm-256color (for proper colors)
+    Expects to run in xterm-256color (for proper colors)
 
     Select the KC85 model with cmdline args:
 
@@ -42,7 +42,6 @@
 #include <ctype.h>
 #include <signal.h>
 #define COMMON_IMPL
-#include "args.h"
 #include "fs.h"
 #include "keybuf.h"
 #define CHIPS_IMPL

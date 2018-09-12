@@ -12,5 +12,5 @@ Run from Docker Hub:
 To build just the emulator:
 
 ```
-> cc kc85.c -o kc85 -O3 -lncurses
+> cc kc85.c -o kc85 -O3 -lcurses
 ```
