@@ -6,7 +6,7 @@ A KC85/4 emulator in Docker.
 Run from Docker Hub:
 
 ```
-> docker --rm -it flohofwoe/kc85_4
+> docker run --rm -it flohofwoe/kc85_4
 ```
 
 To build just the emulator:
