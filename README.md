@@ -14,3 +14,9 @@ To build just the emulator:
 ```
 > cc kc85.c -o kc85 -O3 -lcurses
 ```
+
+The source code is taken from these repositories:
+
+https://github.com/floooh/chips
+https://github.com/floooh/chips-test
+
